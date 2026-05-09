@@ -1,40 +1,33 @@
 class Solution:
     def orangesRotting(self, grid: List[List[int]]) -> int:
         from collections import deque
-        def isBound(c,r):
-            return ((c>=0 and c<len(grid)) and (r>=0 and r<len(grid[0])))
+        rows, cols = len(grid), len(grid[0])
         rotten = deque()
-        visited = set()
-        for c in range(len(grid)):
-            for r in range(len(grid[c])):
+        fresh = 0
+
+        for c in range(rows):
+            for r in range(cols):
                 if grid[c][r] == 2:
-                    rotten.append((c,r))
-                    visited.add((c,r))
+                    rotten.append((c, r))
+                elif grid[c][r] == 1:
+                    fresh += 1
+
+        if fresh == 0:
+            return 0
+
         directions = [[0,1],[1,0],[-1,0],[0,-1]]
         minutes = 0
-        while(rotten):
-            breadth = set()
-            while(rotten):
-                c,r = rotten.popleft()
-                for d in directions:
-                    nc, nr = c + d[0], r + d[1]
-                    if isBound(nc,nr) and (nc,nr) in visited:
-                        continue
-                    if isBound(nc,nr):
-                        if grid[nc][nr] == 1:
-                            grid[nc][nr]=2
-                            breadth.add((nc,nr))
-            if not breadth:
-                for row in grid:
-                    if 1 in row:
-                        return -1
-                return minutes
-            for b in breadth - visited:
-                rotten.append(b)
-                visited.add(b)
-            minutes+=1
-        for row in grid:
-            if 1 in row:
-                return -1
-        return minutes
+
+        while rotten and fresh:
+            minutes += 1
+            for _ in range(len(rotten)):       # process current level only
+                c, r = rotten.popleft()
+                for dc, dr in directions:
+                    nc, nr = c + dc, r + dr
+                    if 0 <= nc < rows and 0 <= nr < cols and grid[nc][nr] == 1:
+                        grid[nc][nr] = 2       # grid mutation = visited
+                        fresh -= 1             # O(1) fresh tracking
+                        rotten.append((nc, nr))
+
+        return minutes if fresh == 0 else -1
 
